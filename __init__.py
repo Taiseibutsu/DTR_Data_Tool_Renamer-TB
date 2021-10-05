@@ -15,6 +15,7 @@ bl_info = {
     "category": "Panels",
 }
 import bpy, addon_utils, os, rna_keymap_ui
+from bpy.types import AddonPreferences
 
 class TS_E_Properties(bpy.types.PropertyGroup):
     nametorename : bpy.props.StringProperty(default = "Enter Name", description = "Name that will be assigned to active object")
@@ -146,7 +147,22 @@ class TS_DATA_TOOLS_PNL_POP(bpy.types.Operator):
     def execute(self, context):
         return {'FINISHED'}
 
-    
+class TS_Datarenamer_PreferencesPanel(AddonPreferences):
+    bl_idname = __name__
+    def draw(self, context):
+        layout = self.layout
+        box=layout.box()
+        box.label(text="Hotkey:")
+        col = box.column()
+        kc = bpy.context.window_manager.keyconfigs.addon
+        for km, kmi in addon_keymaps:
+            km = km.active()
+            col.context_pointer_set("keymap", km)
+            rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
+        row = layout.row()
+        col = row.column()
+        col.prop(self, "TSOVER", text="")
+
 classes = (
     TS_E_Properties,
     TS_RENAME_OBJ_TO_DATABLOCK_SCENE,
@@ -156,9 +172,12 @@ classes = (
     TS_RENAME_DATABLOCK_AND_OBJ,
     TS_DATA_TOOLS_PNL,
     TS_DATA_TOOLS_PNL_POP,
+    TS_Datarenamer_PreferencesPanel,
     )
-addon_keymaps = []            
-    
+addon_keymaps = []         
+
+
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
