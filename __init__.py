@@ -15,10 +15,20 @@ bl_info = {
     "category": "Panels",
 }
 import bpy, addon_utils, os, rna_keymap_ui
-from bpy.types import AddonPreferences
+from bpy.types import AddonPreferences, Panel
 
 class TS_E_Properties(bpy.types.PropertyGroup):
     nametorename : bpy.props.StringProperty(default = "Enter Name", description = "Name that will be assigned to active object")
+    renamerfrom : bpy.props.EnumProperty(
+        name = "Enumerator/Dropdown",
+        description = "sampletext",
+        items= [('OBJECT', 'Object', 'Import name from Object','OBJECT_DATA',0),
+                ('DATABLOCK','Data-block','Import name from Data-Block', 'MESH_DATA', 1),
+                ('MATERIAL','Material','Import name from Active Material', 'MATERIAL', 2)
+        ]
+    )
+    cameraloopingclearcameras : bpy.props.BoolProperty(default = True, description = "Clean all cameras created by the addon")
+    renamerto : bpy.props.BoolProperty(default = True, description = "Transfer Name to Object")
 
 class TS_RENAME_DATABLOCK_AND_OBJ(bpy.types.Operator):
     bl_idname = "ts_ops.renamedataandobj"
@@ -59,6 +69,17 @@ class TS_RENAME_DATABLOCK_TO_OBJ_SELECTION(bpy.types.Operator):
     bl_label = "Renames all data-block names in the scene to the object name"
     bl_description = "Rename Scene DATA-BLOCK > OBJ"
     def execute(self, context):
+        for ob in bpy.context.selected_objects:
+            ob.name = ob.data.name
+        return {"FINISHED"}
+
+class TS_RENAMER(bpy.types.Operator):
+    bl_idname = "ts_ops.renamedatatoobjselect"
+    bl_label = "Renames all data-block names in the scene to the object name"
+    bl_description = "Rename Scene DATA-BLOCK > OBJ"
+    def execute(self, context):
+        #if renameobject:
+
         for ob in bpy.context.selected_objects:
             ob.name = ob.data.name
         return {"FINISHED"}
@@ -108,6 +129,11 @@ def tsdatarenamer(self, context):
         row.operator("ts_ops.renamedatatoobjkscne",text=" ",icon='TRACKING_BACKWARDS_SINGLE') 
         row.separator()
         row.label(icon=datablockicon)
+        row = box.row(align=True)
+        if tstool.renamerfrom == 'DATABLOCK':
+            row.prop(tstool, "renamerfrom",text="",icon=datablockicon)
+        else:
+            row.prop(tstool, "renamerfrom",text="")
     else:
         layout = self.layout
         row = layout.row(align=True)
@@ -132,6 +158,26 @@ class TS_DATA_TOOLS_PNL(bpy.types.Panel):
         layout.label(icon='FILE_TEXT')
     def draw (self,context):
         tsdatarenamer(self, context)
+
+class TS_DATARENAMER_MAT_PNL(Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "TS_OPS"
+    bl_label = "Material Renamer"
+    bl_parent_id = "TSPNL_Data_Tools"
+    bl_options = {'DEFAULT_CLOSED'}        
+    @classmethod
+    def poll(cls, context):
+        return context.object is not None
+    def draw_header(self,context):
+        layout = self.layout
+        layout.label(icon='MATERIAL')
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row(align=True)
+        ob = context.object
+
+        row.template_ID(ob, "active_material", new="material.new")
 
 class TS_DATA_TOOLS_PNL_POP(bpy.types.Operator):
     """Tooltip"""
@@ -163,6 +209,7 @@ class TS_Datarenamer_PreferencesPanel(AddonPreferences):
         col = row.column()
         col.prop(self, "TSOVER", text="")
 
+
 classes = (
     TS_E_Properties,
     TS_RENAME_OBJ_TO_DATABLOCK_SCENE,
@@ -172,6 +219,7 @@ classes = (
     TS_RENAME_DATABLOCK_AND_OBJ,
     TS_DATA_TOOLS_PNL,
     TS_DATA_TOOLS_PNL_POP,
+    TS_DATARENAMER_MAT_PNL,
     TS_Datarenamer_PreferencesPanel,
     )
 addon_keymaps = []         
