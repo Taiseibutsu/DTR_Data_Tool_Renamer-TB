@@ -15,53 +15,113 @@ bl_info = {
     "category": "Panels",
 }
 import bpy, addon_utils, os, rna_keymap_ui
-from bpy.types import AddonPreferences
+from bpy.types import AddonPreferences, Panel
 
 class TS_E_Properties(bpy.types.PropertyGroup):
     nametorename : bpy.props.StringProperty(default = "Enter Name", description = "Name that will be assigned to active object")
+    renamerfrom : bpy.props.EnumProperty(
+        name = "Enumerator/Dropdown",
+        description = "Object that will rename",
+        items= [('OBJECT', 'Object', 'Import name from Object','OBJECT_DATA',0),
+                ('DATABLOCK','Data-block','Import name from Data-Block', 'MESH_DATA', 1),
+                ('MATERIAL','Material','Import name from Active Material', 'MATERIAL', 2),
+                ('ACTION','Action','Import name from Animation', 'ACTION', 3)
+        ]
+    )
+    renamermode : bpy.props.EnumProperty(
+        name = "Enumerator/Dropdown",
+        description = "Mode to rename",
+        items= [('SCENE', 'Scene', 'Export name to Scene','SCENE_DATA',0),
+                ('SELECTION','Selection','Export name to Selection', 'RESTRICT_SELECT_OFF', 1),
+                ('COLLECTION','Collection','Export name to Selected Colection', 'OUTLINER_COLLECTION', 2),
+                ('ALL','All','Export name to All Objects', 'BLENDER', 3)
+        ]
+    )
+    renamertoscene : bpy.props.PointerProperty(type=bpy.types.Scene)
+    renamertosceneactive : bpy.props.BoolProperty(default = True, description = "Transfer Name to Active Scene")
 
-class TS_RENAME_DATABLOCK_AND_OBJ(bpy.types.Operator):
-    bl_idname = "ts_ops.renamedataandobj"
-    bl_label = "Renames current Data-Block and Object name"
-    bl_description = "Rename DATA-BLOCK & OBJ"
+    renamertocollection : bpy.props.PointerProperty(type=bpy.types.Collection)
+    renamertocollectionactive : bpy.props.BoolProperty(default = False, description = "Transfer Name to ActiveCollection")
+
+    renamertoobject : bpy.props.BoolProperty(default = True, description = "Transfer Name to Object")
+    renamertodatablock : bpy.props.BoolProperty(default = True, description = "Transfer Name to Data-Block")
+    renamertoaction : bpy.props.BoolProperty(default = False, description = "Transfer Name to Animation")
+    renamertomaterial : bpy.props.BoolProperty(default = False, description = "Transfer Name to Material")
+
+def setrenamename(ob,renamename):
+    tstool = bpy.context.scene.ts_data_tool
+    if tstool.renamerfrom !='OBJECT' and tstool.renamertoobject:
+        ob.name = renamename
+    if tstool.renamerfrom !='DATABLOCK' and tstool.renamertodatablock:
+        ob.data.name = renamename
+    if tstool.renamerfrom !='ACTION' and tstool.renamertoaction and ob.animation_data != None:   
+        ob.animation_data.action.name = renamename
+    if tstool.renamerfrom !='MATERIAL' and tstool.renamertomaterial and ob.active_material != None:
+        ob.active_material.name = renamename
+      
+def renamerename(ob):
+    tstool = bpy.context.scene.ts_data_tool
+    if tstool.renamerfrom =='OBJECT':
+        renamename = ob.name
+        setrenamename(ob,renamename)
+    if tstool.renamerfrom =='DATABLOCK':
+        renamename = ob.data.name
+        setrenamename(ob,renamename)
+    if tstool.renamerfrom =='ACTION':
+        if ob.animation_data != None:
+            if ob.animation_data.action != None:
+                renamename = ob.animation_data.action.name
+                setrenamename(ob,renamename)
+    if tstool.renamerfrom =='MATERIAL':
+        if ob.active_material != None:
+            print("HAS MATERIAL")
+            renamename = ob.active_material.name
+            setrenamename(ob,renamename)        
+    #return renamename
+
+class TS_RENAMER(bpy.types.Operator):
+    bl_idname = "ts_ops.renamercut"
+    bl_label = "Renames data"
+    bl_description = "Rename Data"
+    
     def execute(self, context):
-        for ob in bpy.context.selected_objects:
-            tstool = context.scene.ts_data_tool
-            ob.name = tstool.nametorename
-            ob.data.name = tstool.nametorename
+        acobj = bpy.context.active_object
+        acobjt = acobj.type
+        tstool = context.scene.ts_data_tool
+        #if tstool.renamerfrom =='OBJECT':
+        #    renamename = acobj.name
+        #if tstool.renamerfrom =='DATABLOCK':
+        #    renamename = acobj.data.name
+        #if tstool.renamerfrom =='ACTION':
+        #    renamename = acobj.animation_data.action.name
+        #if tstool.renamerfrom =='MATERIAL':
+        #    renamename = acobj.active_material.name
+
+        if tstool.renamermode =='SELECTION':  
+            for ob in bpy.context.selected_objects:
+                renamerename(ob)        
+        if tstool.renamermode =='ALL':
+            for ob in bpy.data.objects:
+                renamerename(ob)                  
+        if tstool.renamermode =='SCENE':
+            if tstool.renamertosceneactive:
+                for ob in bpy.context.scene.objects:
+                    renamerename(ob) 
+            else:
+                if tstool.renamertoscene != None:
+                    for ob in tstool.renamertoscene.objects:
+                        renamerename(ob) 
+        if tstool.renamermode =='COLLECTION':
+            if tstool.renamertocollectionactive:
+                for ob in bpy.context.collection.objects:
+                    renamerename(ob) 
+            else:
+                if tstool.renamertocollection != None:
+                    for ob in tstool.renamertocollection.objects:
+                        renamerename(ob)
         return {"FINISHED"}
-class TS_RENAME_OBJ_TO_DATABLOCK_SCENE(bpy.types.Operator):
-    bl_idname = "ts_ops.renameobjtodatascene"
-    bl_label = "Renames all object names in the scene to the data-block property name"
-    bl_description = "Rename Scene OBJ > DATA-BLOCK"
-    def execute(self, context):
-        for ob in bpy.data.objects:
-            ob.data.name = ob.name
-        return {"FINISHED"}
-class TS_RENAME_DATABLOCK_TO_OBJ_SCENE(bpy.types.Operator):
-    bl_idname = "ts_ops.renamedatatoobjkscne"
-    bl_label = "Renames all data-block names in the scene to the object name"
-    bl_description = "Rename Scene DATA-BLOCK > OBJ"
-    def execute(self, context):
-        for ob in bpy.data.objects:
-            ob.name = ob.data.name
-        return {"FINISHED"}
-class TS_RENAME_OBJ_TO_DATABLOCK_SELECTION(bpy.types.Operator):
-    bl_idname = "ts_ops.renameobjtodataselect"
-    bl_label = "Renames all object names in the scene to the data-block property name"
-    bl_description = "Rename Scene OBJ > DATA-BLOCK"
-    def execute(self, context):
-        for ob in bpy.context.selected_objects:
-            ob.data.name = ob.name
-        return {"FINISHED"}
-class TS_RENAME_DATABLOCK_TO_OBJ_SELECTION(bpy.types.Operator):
-    bl_idname = "ts_ops.renamedatatoobjselect"
-    bl_label = "Renames all data-block names in the scene to the object name"
-    bl_description = "Rename Scene DATA-BLOCK > OBJ"
-    def execute(self, context):
-        for ob in bpy.context.selected_objects:
-            ob.name = ob.data.name
-        return {"FINISHED"}
+
+
 
 def tsdatarenamer(self, context):
     acobj = bpy.context.active_object
@@ -80,34 +140,69 @@ def tsdatarenamer(self, context):
         row = layout.row(align=True)
         row.template_ID(context.view_layer.objects, "active", filter='AVAILABLE')
         row.template_ID(context.view_layer.objects.active, "data")
-        row = layout.row(align=True)
-        row.label(text="Insert Text to Name")
-        row = layout.row(align=True)
-        row.prop(tstool, "nametorename",text="")
-        row.operator("ts_ops.renamedataandobj",text="Rename Both",icon='FILE_TEXT')   
-        #row.label(text=str(bpy.context.active_object.name),icon='OBJECT_DATA')
-        #row.label(text=str(bpy.context.active_object.data.name),icon=datablockicon)
-        row = layout.row(align=True)
-        box = layout.box() 
+        if tstool.renamerfrom =='ACTION' or tstool.renamerfrom =='MATERIAL' or tstool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME'] or tstool.renamertoaction:
+            row = layout.row(align=True)
+        if tstool.renamerfrom =='MATERIAL' or tstool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME']:
+            row.template_ID(acobj, "active_material", new="material.new")
+        if (tstool.renamerfrom =='ACTION' or tstool.renamertoaction) and (tstool.renamerfrom =='MATERIAL' or tstool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME']):
+            row.separator()
+        if tstool.renamertoaction or tstool.renamerfrom =='ACTION':
+            st = context.space_data          
+            #layout.template_ID(st, "action", new="action.new", unlink="action.unlink")
+            if acobj.animation_data != None:
+                if acobj.animation_data.action != None:
+                    row.prop(acobj.animation_data.action, "name" , text="",icon='ACTION')
+                else:
+                    row.label(text="No Active Action",icon='ACTION')
+            else:
+                row.label(text="No Active Action",icon='ACTION')
+                #row.operator("action.new",(acobj))
+
+        box = layout.box()
+        #ALTERNATIVE WAY TO DISPLAY
+        #row = box.row(align=True)
+        #row.prop_enum(tstool, "renamerfrom","OBJECT",icon='OBJECT_DATA')
+        #row.prop_enum(tstool, "renamerfrom","DATABLOCK",icon=datablockicon)
+        #row.prop_enum(tstool, "renamerfrom","ACTION",icon='ACTION')
+        #row.prop_enum(tstool, "renamerfrom","MATERIAL",icon='MATERIAL')
         row = box.row(align=True)
-        row.label(text="Rename Selected Objects",icon='RESTRICT_SELECT_OFF')
+        if tstool.renamerfrom == 'DATABLOCK':
+            row.prop(tstool, "renamerfrom",text="",icon=datablockicon)
+        else:
+            row.prop(tstool, "renamerfrom",text="")
+        row.label(icon='TRACKING_FORWARDS_SINGLE')
+        if tstool.renamerfrom != 'DATABLOCK':
+            row.prop(tstool, "renamertodatablock",text="",icon=datablockicon)
+        if tstool.renamerfrom != 'OBJECT':
+            row.prop(tstool, "renamertoobject",text="",icon='OBJECT_DATA')
+        if tstool.renamerfrom != 'ACTION':
+            row.prop(tstool, "renamertoaction",text="",icon='ACTION')
+        if tstool.renamerfrom != 'MATERIAL':
+            row.prop(tstool, "renamertomaterial",text="",icon='MATERIAL')
+
+        if tstool.renamermode =='SCENE':
+            if tstool.renamertosceneactive:
+                row.prop(tstool, "renamertosceneactive",text="Active Scene",icon='PIVOT_ACTIVE')
+            else:
+                row.prop(tstool, "renamertoscene",text="",icon='SCENE_DATA')
+                row.prop(tstool, "renamertosceneactive",text="",icon='PIVOT_ACTIVE')
+        if tstool.renamermode =='COLLECTION':
+            if tstool.renamertocollectionactive:
+                row.prop(tstool, "renamertocollectionactive",text="Active Collection",icon='PIVOT_ACTIVE')
+            else:
+                row.prop(tstool, "renamertocollection",text="",icon='OUTLINER_COLLECTION')
+                row.prop(tstool, "renamertocollectionactive",text="",icon='PIVOT_ACTIVE')
+        
+        if tstool.renamermode in ['COLLECTION','SCENE']:
+            icononlyrename = True
+        else:
+            icononlyrename = False
+
+        row.prop(tstool, "renamermode",text="",icon_only=icononlyrename)
+
         row = box.row(align=True)
-        row.label(icon='OBJECT_DATA')
-        row.separator()
-        row.operator("ts_ops.renameobjtodataselect",text=" ",icon='TRACKING_FORWARDS_SINGLE')    
-        row.operator("ts_ops.renamedatatoobjselect",text=" ",icon='TRACKING_BACKWARDS_SINGLE') 
-        row.separator()
-        row.label(icon=datablockicon)    
-        box = layout.box() 
-        row = box.row(align=True)
-        row.label(text="Rename Scene Objects",icon='SCENE_DATA')
-        row = box.row(align=True)
-        row.label(icon='OBJECT_DATA')
-        row.separator()
-        row.operator("ts_ops.renameobjtodatascene",text=" ",icon='TRACKING_FORWARDS_SINGLE')    
-        row.operator("ts_ops.renamedatatoobjkscne",text=" ",icon='TRACKING_BACKWARDS_SINGLE') 
-        row.separator()
-        row.label(icon=datablockicon)
+        row.operator("ts_ops.renamercut",text="Rename",icon='SORTALPHA')
+
     else:
         layout = self.layout
         row = layout.row(align=True)
@@ -163,16 +258,13 @@ class TS_Datarenamer_PreferencesPanel(AddonPreferences):
         col = row.column()
         col.prop(self, "TSOVER", text="")
 
+
 classes = (
     TS_E_Properties,
-    TS_RENAME_OBJ_TO_DATABLOCK_SCENE,
-    TS_RENAME_DATABLOCK_TO_OBJ_SCENE,
-    TS_RENAME_OBJ_TO_DATABLOCK_SELECTION,
-    TS_RENAME_DATABLOCK_TO_OBJ_SELECTION,
-    TS_RENAME_DATABLOCK_AND_OBJ,
     TS_DATA_TOOLS_PNL,
     TS_DATA_TOOLS_PNL_POP,
     TS_Datarenamer_PreferencesPanel,
+    TS_RENAMER,
     )
 addon_keymaps = []         
 
