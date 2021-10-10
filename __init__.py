@@ -54,7 +54,7 @@ def setrenamename(ob,renamename):
         ob.name = renamename
     if tstool.renamerfrom !='DATABLOCK' and tstool.renamertodatablock:
         ob.data.name = renamename
-    if tstool.renamerfrom !='ACTION' and tstool.renamertoaction and ob.animation_data.action != None:   
+    if tstool.renamerfrom !='ACTION' and tstool.renamertoaction and ob.animation_data != None:   
         ob.animation_data.action.name = renamename
     if tstool.renamerfrom !='MATERIAL' and tstool.renamertomaterial and ob.active_material != None:
         ob.active_material.name = renamename
@@ -68,9 +68,10 @@ def renamerename(ob):
         renamename = ob.data.name
         setrenamename(ob,renamename)
     if tstool.renamerfrom =='ACTION':
-        if ob.animation_data.action != None:
-            renamename = ob.animation_data.action.name
-            setrenamename(ob,renamename)
+        if ob.animation_data != None:
+            if ob.animation_data.action != None:
+                renamename = ob.animation_data.action.name
+                setrenamename(ob,renamename)
     if tstool.renamerfrom =='MATERIAL':
         if ob.active_material != None:
             print("HAS MATERIAL")
