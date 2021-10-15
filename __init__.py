@@ -4,7 +4,7 @@
 # <2021> <Taiseibutsu>"
 
 bl_info = {
-    "name": "TS_Data_Renamer",
+    "name": "TB_Data_Renamer",
     "author": "Taiseibutsu",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
@@ -17,7 +17,7 @@ bl_info = {
 import bpy, addon_utils, os, rna_keymap_ui
 from bpy.types import AddonPreferences, Panel
 
-class TS_E_Properties(bpy.types.PropertyGroup):
+class TB_E_Properties(bpy.types.PropertyGroup):
     nametorename : bpy.props.StringProperty(default = "Enter Name", description = "Name that will be assigned to active object")
     renamerfrom : bpy.props.EnumProperty(
         name = "Enumerator/Dropdown",
@@ -49,85 +49,85 @@ class TS_E_Properties(bpy.types.PropertyGroup):
     renamertomaterial : bpy.props.BoolProperty(default = False, description = "Transfer Name to Material")
 
 def setrenamename(ob,renamename):
-    tstool = bpy.context.scene.ts_data_tool
-    if tstool.renamerfrom !='OBJECT' and tstool.renamertoobject:
+    tbtool = bpy.context.scene.tb_data_tool
+    if tbtool.renamerfrom !='OBJECT' and tbtool.renamertoobject:
         ob.name = renamename
-    if tstool.renamerfrom !='DATABLOCK' and tstool.renamertodatablock:
+    if tbtool.renamerfrom !='DATABLOCK' and tbtool.renamertodatablock:
         ob.data.name = renamename
-    if tstool.renamerfrom !='ACTION' and tstool.renamertoaction and ob.animation_data != None:   
+    if tbtool.renamerfrom !='ACTION' and tbtool.renamertoaction and ob.animation_data != None:   
         ob.animation_data.action.name = renamename
-    if tstool.renamerfrom !='MATERIAL' and tstool.renamertomaterial and ob.active_material != None:
+    if tbtool.renamerfrom !='MATERIAL' and tbtool.renamertomaterial and ob.active_material != None:
         ob.active_material.name = renamename
       
 def renamerename(ob):
-    tstool = bpy.context.scene.ts_data_tool
-    if tstool.renamerfrom =='OBJECT':
+    tbtool = bpy.context.scene.tb_data_tool
+    if tbtool.renamerfrom =='OBJECT':
         renamename = ob.name
         setrenamename(ob,renamename)
-    if tstool.renamerfrom =='DATABLOCK':
+    if tbtool.renamerfrom =='DATABLOCK':
         renamename = ob.data.name
         setrenamename(ob,renamename)
-    if tstool.renamerfrom =='ACTION':
+    if tbtool.renamerfrom =='ACTION':
         if ob.animation_data != None:
             if ob.animation_data.action != None:
                 renamename = ob.animation_data.action.name
                 setrenamename(ob,renamename)
-    if tstool.renamerfrom =='MATERIAL':
+    if tbtool.renamerfrom =='MATERIAL':
         if ob.active_material != None:
             print("HAS MATERIAL")
             renamename = ob.active_material.name
             setrenamename(ob,renamename)        
     #return renamename
 
-class TS_RENAMER(bpy.types.Operator):
-    bl_idname = "ts_ops.renamercut"
+class TB_RENAMER(bpy.types.Operator):
+    bl_idname = "tb_ops.renamercut"
     bl_label = "Renames data"
     bl_description = "Rename Data"
     
     def execute(self, context):
         acobj = bpy.context.active_object
         acobjt = acobj.type
-        tstool = context.scene.ts_data_tool
-        #if tstool.renamerfrom =='OBJECT':
+        tbtool = context.scene.tb_data_tool
+        #if tbtool.renamerfrom =='OBJECT':
         #    renamename = acobj.name
-        #if tstool.renamerfrom =='DATABLOCK':
+        #if tbtool.renamerfrom =='DATABLOCK':
         #    renamename = acobj.data.name
-        #if tstool.renamerfrom =='ACTION':
+        #if tbtool.renamerfrom =='ACTION':
         #    renamename = acobj.animation_data.action.name
-        #if tstool.renamerfrom =='MATERIAL':
+        #if tbtool.renamerfrom =='MATERIAL':
         #    renamename = acobj.active_material.name
 
-        if tstool.renamermode =='SELECTION':  
+        if tbtool.renamermode =='SELECTION':  
             for ob in bpy.context.selected_objects:
                 renamerename(ob)        
-        if tstool.renamermode =='ALL':
+        if tbtool.renamermode =='ALL':
             for ob in bpy.data.objects:
                 renamerename(ob)                  
-        if tstool.renamermode =='SCENE':
-            if tstool.renamertosceneactive:
+        if tbtool.renamermode =='SCENE':
+            if tbtool.renamertosceneactive:
                 for ob in bpy.context.scene.objects:
                     renamerename(ob) 
             else:
-                if tstool.renamertoscene != None:
-                    for ob in tstool.renamertoscene.objects:
+                if tbtool.renamertoscene != None:
+                    for ob in tbtool.renamertoscene.objects:
                         renamerename(ob) 
-        if tstool.renamermode =='COLLECTION':
-            if tstool.renamertocollectionactive:
+        if tbtool.renamermode =='COLLECTION':
+            if tbtool.renamertocollectionactive:
                 for ob in bpy.context.collection.objects:
                     renamerename(ob) 
             else:
-                if tstool.renamertocollection != None:
-                    for ob in tstool.renamertocollection.objects:
+                if tbtool.renamertocollection != None:
+                    for ob in tbtool.renamertocollection.objects:
                         renamerename(ob)
         return {"FINISHED"}
 
 
 
-def tsdatarenamer(self, context):
+def tbdatarenamer(self, context):
     acobj = bpy.context.active_object
     acobjt = acobj.type
     if acobjt != 'EMPTY':
-        tstool = context.scene.ts_data_tool
+        tbtool = context.scene.tb_data_tool
         if acobjt != 'GPENCIL' and acobjt != 'LIGHT_PROBE' and acobjt != 'SPEAKER':
             datablockicon = bpy.context.active_object.type + '_DATA'
         elif acobjt == 'GPENCIL':
@@ -140,13 +140,13 @@ def tsdatarenamer(self, context):
         row = layout.row(align=True)
         row.template_ID(context.view_layer.objects, "active", filter='AVAILABLE')
         row.template_ID(context.view_layer.objects.active, "data")
-        if tstool.renamerfrom =='ACTION' or tstool.renamerfrom =='MATERIAL' or tstool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME'] or tstool.renamertoaction:
+        if tbtool.renamerfrom =='ACTION' or tbtool.renamerfrom =='MATERIAL' or tbtool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME'] or tbtool.renamertoaction:
             row = layout.row(align=True)
-        if tstool.renamerfrom =='MATERIAL' or tstool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME']:
+        if tbtool.renamerfrom =='MATERIAL' or tbtool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME']:
             row.template_ID(acobj, "active_material", new="material.new")
-        if (tstool.renamerfrom =='ACTION' or tstool.renamertoaction) and (tstool.renamerfrom =='MATERIAL' or tstool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME']):
+        if (tbtool.renamerfrom =='ACTION' or tbtool.renamertoaction) and (tbtool.renamerfrom =='MATERIAL' or tbtool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME']):
             row.separator()
-        if tstool.renamertoaction or tstool.renamerfrom =='ACTION':
+        if tbtool.renamertoaction or tbtool.renamerfrom =='ACTION':
             st = context.space_data          
             #layout.template_ID(st, "action", new="action.new", unlink="action.unlink")
             if acobj.animation_data != None:
@@ -161,47 +161,47 @@ def tsdatarenamer(self, context):
         box = layout.box()
         #ALTERNATIVE WAY TO DISPLAY
         #row = box.row(align=True)
-        #row.prop_enum(tstool, "renamerfrom","OBJECT",icon='OBJECT_DATA')
-        #row.prop_enum(tstool, "renamerfrom","DATABLOCK",icon=datablockicon)
-        #row.prop_enum(tstool, "renamerfrom","ACTION",icon='ACTION')
-        #row.prop_enum(tstool, "renamerfrom","MATERIAL",icon='MATERIAL')
+        #row.prop_enum(tbtool, "renamerfrom","OBJECT",icon='OBJECT_DATA')
+        #row.prop_enum(tbtool, "renamerfrom","DATABLOCK",icon=datablockicon)
+        #row.prop_enum(tbtool, "renamerfrom","ACTION",icon='ACTION')
+        #row.prop_enum(tbtool, "renamerfrom","MATERIAL",icon='MATERIAL')
         row = box.row(align=True)
-        if tstool.renamerfrom == 'DATABLOCK':
-            row.prop(tstool, "renamerfrom",text="",icon=datablockicon)
+        if tbtool.renamerfrom == 'DATABLOCK':
+            row.prop(tbtool, "renamerfrom",text="",icon=datablockicon)
         else:
-            row.prop(tstool, "renamerfrom",text="")
+            row.prop(tbtool, "renamerfrom",text="")
         row.label(icon='TRACKING_FORWARDS_SINGLE')
-        if tstool.renamerfrom != 'DATABLOCK':
-            row.prop(tstool, "renamertodatablock",text="",icon=datablockicon)
-        if tstool.renamerfrom != 'OBJECT':
-            row.prop(tstool, "renamertoobject",text="",icon='OBJECT_DATA')
-        if tstool.renamerfrom != 'ACTION':
-            row.prop(tstool, "renamertoaction",text="",icon='ACTION')
-        if tstool.renamerfrom != 'MATERIAL':
-            row.prop(tstool, "renamertomaterial",text="",icon='MATERIAL')
+        if tbtool.renamerfrom != 'DATABLOCK':
+            row.prop(tbtool, "renamertodatablock",text="",icon=datablockicon)
+        if tbtool.renamerfrom != 'OBJECT':
+            row.prop(tbtool, "renamertoobject",text="",icon='OBJECT_DATA')
+        if tbtool.renamerfrom != 'ACTION':
+            row.prop(tbtool, "renamertoaction",text="",icon='ACTION')
+        if tbtool.renamerfrom != 'MATERIAL':
+            row.prop(tbtool, "renamertomaterial",text="",icon='MATERIAL')
 
-        if tstool.renamermode =='SCENE':
-            if tstool.renamertosceneactive:
-                row.prop(tstool, "renamertosceneactive",text="Active Scene",icon='PIVOT_ACTIVE')
+        if tbtool.renamermode =='SCENE':
+            if tbtool.renamertosceneactive:
+                row.prop(tbtool, "renamertosceneactive",text="Active Scene",icon='PIVOT_ACTIVE')
             else:
-                row.prop(tstool, "renamertoscene",text="",icon='SCENE_DATA')
-                row.prop(tstool, "renamertosceneactive",text="",icon='PIVOT_ACTIVE')
-        if tstool.renamermode =='COLLECTION':
-            if tstool.renamertocollectionactive:
-                row.prop(tstool, "renamertocollectionactive",text="Active Collection",icon='PIVOT_ACTIVE')
+                row.prop(tbtool, "renamertoscene",text="",icon='SCENE_DATA')
+                row.prop(tbtool, "renamertosceneactive",text="",icon='PIVOT_ACTIVE')
+        if tbtool.renamermode =='COLLECTION':
+            if tbtool.renamertocollectionactive:
+                row.prop(tbtool, "renamertocollectionactive",text="Active Collection",icon='PIVOT_ACTIVE')
             else:
-                row.prop(tstool, "renamertocollection",text="",icon='OUTLINER_COLLECTION')
-                row.prop(tstool, "renamertocollectionactive",text="",icon='PIVOT_ACTIVE')
+                row.prop(tbtool, "renamertocollection",text="",icon='OUTLINER_COLLECTION')
+                row.prop(tbtool, "renamertocollectionactive",text="",icon='PIVOT_ACTIVE')
         
-        if tstool.renamermode in ['COLLECTION','SCENE']:
+        if tbtool.renamermode in ['COLLECTION','SCENE']:
             icononlyrename = True
         else:
             icononlyrename = False
 
-        row.prop(tstool, "renamermode",text="",icon_only=icononlyrename)
+        row.prop(tbtool, "renamermode",text="",icon_only=icononlyrename)
 
         row = box.row(align=True)
-        row.operator("ts_ops.renamercut",text="Rename",icon='SORTALPHA')
+        row.operator("tb_ops.renamercut",text="Rename",icon='SORTALPHA')
 
     else:
         layout = self.layout
@@ -213,12 +213,12 @@ def tsdatarenamer(self, context):
             row = layout.row(align=True)
             row.template_ID(acobj, "data", open="image.open", unlink="object.unlink_data")
 
-class TS_DATA_TOOLS_PNL(bpy.types.Panel):
+class TB_DATA_TOOLS_PNL(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "TS_OPS"
-    bl_label = "TS_Data_Tools"
-    bl_idname = "TSPNL_Data_Tools"
+    bl_category = "TB_OPS"
+    bl_label = "TB_Data_Tools"
+    bl_idname = "TB_PNL_Data_Tools"
     @classmethod
     def poll(cls, context):
         return context.object is not None
@@ -226,11 +226,11 @@ class TS_DATA_TOOLS_PNL(bpy.types.Panel):
         layout = self.layout
         layout.label(icon='FILE_TEXT')
     def draw (self,context):
-        tsdatarenamer(self, context)
+        tbdatarenamer(self, context)
 
-class TS_DATA_TOOLS_PNL_POP(bpy.types.Operator):
+class TB_DATA_TOOLS_PNL_POP(bpy.types.Operator):
     """Tooltip"""
-    bl_idname = "context.tsdatarenamerpopup"
+    bl_idname = "context.tbdatarenamerpopup"
     bl_label = "Data Renamer"
     @classmethod
     def poll(cls, context):
@@ -238,11 +238,11 @@ class TS_DATA_TOOLS_PNL_POP(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
     def draw(self, context):
-        tsdatarenamer(self, context)
+        tbdatarenamer(self, context)
     def execute(self, context):
         return {'FINISHED'}
 
-class TS_Datarenamer_PreferencesPanel(AddonPreferences):
+class TB_Datarenamer_PreferencesPanel(AddonPreferences):
     bl_idname = __name__
     def draw(self, context):
         layout = self.layout
@@ -256,15 +256,15 @@ class TS_Datarenamer_PreferencesPanel(AddonPreferences):
             rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
         row = layout.row()
         col = row.column()
-        col.prop(self, "TSOVER", text="")
+        col.prop(self, "TBOVER", text="")
 
 
 classes = (
-    TS_E_Properties,
-    TS_DATA_TOOLS_PNL,
-    TS_DATA_TOOLS_PNL_POP,
-    TS_Datarenamer_PreferencesPanel,
-    TS_RENAMER,
+    TB_E_Properties,
+    TB_DATA_TOOLS_PNL,
+    TB_DATA_TOOLS_PNL_POP,
+    TB_Datarenamer_PreferencesPanel,
+    TB_RENAMER,
     )
 addon_keymaps = []         
 
@@ -273,14 +273,14 @@ addon_keymaps = []
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-        bpy.types.Scene.ts_data_tool = bpy.props.PointerProperty(type= TS_E_Properties)
+        bpy.types.Scene.tb_data_tool = bpy.props.PointerProperty(type= TB_E_Properties)
  #KEYMAP
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
     if kc:
      #VIEW3D        
         km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
-        kmi = km.keymap_items.new("context.tsdatarenamerpopup", 'F2', 'PRESS', alt=True, ctrl=False, shift=False)
+        kmi = km.keymap_items.new("context.tbdatarenamerpopup", 'F2', 'PRESS', alt=True, ctrl=False, shift=False)
         kmi.active = True
         addon_keymaps.append((km, kmi))
 
@@ -289,7 +289,7 @@ def unregister():
  #CLASSES
     for cls in classes:
         bpy.utils.unregister_class(cls)
-        bpy.types.Scene.ts_data_tool
+        bpy.types.Scene.tb_data_tool
  #KEYMAP
     for km, kmi in addon_keymaps:
         km.keymap_items.remove(kmi)
