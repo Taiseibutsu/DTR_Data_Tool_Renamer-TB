@@ -1,4 +1,4 @@
-# TB_Data_Renamer
+# TB_Data_Tools_Renamer
 Add-on for Blender with operations to transfer name between object, data, materials and action names
 
 
