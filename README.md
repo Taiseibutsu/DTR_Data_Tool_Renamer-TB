@@ -8,6 +8,4 @@ Add-on for Blender with operations to transfer name between object, data, materi
 - Control Object, Data, Material and Actions name in same panel.
 
            
-           
-**Current Shorcut for display in 3D viewport [alt + F2]  (I know this is not nice for linux users, please feedback is welcome on changing this shorcut.)**    
 
