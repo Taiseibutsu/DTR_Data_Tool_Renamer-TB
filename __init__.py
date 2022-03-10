@@ -4,7 +4,7 @@
 # <2021> <Taiseibutsu>"
 
 bl_info = {
-    "name": "TB_Data_Renamer",
+    "name": "Data_Renamer(TB)",
     "author": "Taiseibutsu",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
@@ -12,7 +12,7 @@ bl_info = {
     "description": "Custom tools for assigning names between object name and data-blocks",
     "warning": "",
     "wiki_url": "",
-    "category": "Panels",
+    "category": "TB, Panels",
 }
 import bpy, addon_utils, os, rna_keymap_ui
 from bpy.types import AddonPreferences, Panel
