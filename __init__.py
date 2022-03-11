@@ -1,7 +1,5 @@
-# This software is MIT licensed (https://opensource.org/licenses/MIT) 
-# This program is free software: you can redistribute it and/or modify it.
-# Tested on 3.0 Alpha
-# <2021> <Taiseibutsu>"
+# (GNU GPL) <2022> <Taiseibutsu>" Developed for Blender 3.2, Tested on 3.1
+# This program is free software: you can redistribute it and/or modify it, WITHOUT ANY WARRANTY that wont wake up on the backrooms. --- Kreepyrights is just a joke, this is license under GNU General Public License (GPL, or “free software”), but just with a strange name to reference, or maybe not...
 
 bl_info = {
     "name": "Data_Renamer(TB)",
