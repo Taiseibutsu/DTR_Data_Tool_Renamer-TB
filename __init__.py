@@ -10,7 +10,7 @@ bl_info = {
     "description": "Custom tools for assigning names between object name and data-blocks",
     "warning": "",
     "wiki_url": "",
-    "category": "TB, Panels",
+    "category": "TB",
 }
 import bpy, addon_utils, os, rna_keymap_ui
 from bpy.types import AddonPreferences, Panel
