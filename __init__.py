@@ -46,6 +46,8 @@ class TB_E_Properties(bpy.types.PropertyGroup):
     renamertoaction : bpy.props.BoolProperty(default = False, description = "Transfer Name to Animation")
     renamertomaterial : bpy.props.BoolProperty(default = False, description = "Transfer Name to Material")
 
+    expand_menus : bpy.props.BoolProperty(default = False, description = "Collapse/Expanse readability of the panel")
+
 def setrenamename(ob,renamename):
     tbtool = bpy.context.scene.tb_data_tool
     if tbtool.renamerfrom !='OBJECT' and tbtool.renamertoobject:
@@ -75,7 +77,6 @@ def renamerename(ob):
             print("HAS MATERIAL")
             renamename = ob.active_material.name
             setrenamename(ob,renamename)        
-    #return renamename
 
 class TB_RENAMER(bpy.types.Operator):
     bl_idname = "tb_ops.renamercut"
@@ -86,14 +87,6 @@ class TB_RENAMER(bpy.types.Operator):
         acobj = bpy.context.active_object
         acobjt = acobj.type
         tbtool = context.scene.tb_data_tool
-        #if tbtool.renamerfrom =='OBJECT':
-        #    renamename = acobj.name
-        #if tbtool.renamerfrom =='DATABLOCK':
-        #    renamename = acobj.data.name
-        #if tbtool.renamerfrom =='ACTION':
-        #    renamename = acobj.animation_data.action.name
-        #if tbtool.renamerfrom =='MATERIAL':
-        #    renamename = acobj.active_material.name
 
         if tbtool.renamermode =='SELECTION':  
             for ob in bpy.context.selected_objects:
@@ -137,7 +130,8 @@ def tbdatarenamer(self, context):
         layout = self.layout
         row = layout.row(align=True)
         row.template_ID(context.view_layer.objects, "active", filter='AVAILABLE')
-        row.template_ID(context.view_layer.objects.active, "data")
+        if tbtool.renamertodatablock:
+            row.template_ID(context.view_layer.objects.active, "data")
         if tbtool.renamerfrom =='ACTION' or tbtool.renamerfrom =='MATERIAL' or tbtool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME'] or tbtool.renamertoaction:
             row = layout.row(align=True)
         if tbtool.renamerfrom =='MATERIAL' or tbtool.renamertomaterial and acobjt in ['MESH','META','HAIR','CURVE','POINTCLOUD','SURFACE','GPENCIL','VOLUME']:
@@ -156,28 +150,44 @@ def tbdatarenamer(self, context):
                 row.label(text="No Active Action",icon='ACTION')
                 #row.operator("action.new",(acobj))
 
+
         box = layout.box()
-        #ALTERNATIVE WAY TO DISPLAY
-        #row = box.row(align=True)
-        #row.prop_enum(tbtool, "renamerfrom","OBJECT",icon='OBJECT_DATA')
-        #row.prop_enum(tbtool, "renamerfrom","DATABLOCK",icon=datablockicon)
-        #row.prop_enum(tbtool, "renamerfrom","ACTION",icon='ACTION')
-        #row.prop_enum(tbtool, "renamerfrom","MATERIAL",icon='MATERIAL')
-        row = box.row(align=True)
+        if tbtool.expand_menus:
+            row = box.row(align=True)
+            row.label(text="Rename From")
+        else:
+            row = box.row(align=True)
         if tbtool.renamerfrom == 'DATABLOCK':
             row.prop(tbtool, "renamerfrom",text="",icon=datablockicon)
         else:
             row.prop(tbtool, "renamerfrom",text="")
+        if tbtool.expand_menus:
+            row = box.row(align=True)
+            row.label(text="To")
+            texticonob = "Object"
+            texticondb = "Data-Block"
+            texticonmat = "Material"
+            texticonac = "Action" 
+        else:
+            texticonob = ""
+            texticondb = ""
+            texticonmat = ""
+            texticonac = "" 
         row.label(icon='TRACKING_FORWARDS_SINGLE')
         if tbtool.renamerfrom != 'DATABLOCK':
-            row.prop(tbtool, "renamertodatablock",text="",icon=datablockicon)
+            row.prop(tbtool, "renamertodatablock",text=texticondb,icon=datablockicon)
         if tbtool.renamerfrom != 'OBJECT':
-            row.prop(tbtool, "renamertoobject",text="",icon='OBJECT_DATA')
+            row.prop(tbtool, "renamertoobject",text=texticonob,icon='OBJECT_DATA')
         if tbtool.renamerfrom != 'ACTION':
-            row.prop(tbtool, "renamertoaction",text="",icon='ACTION')
-        if tbtool.renamerfrom != 'MATERIAL':
-            row.prop(tbtool, "renamertomaterial",text="",icon='MATERIAL')
-
+            row.prop(tbtool, "renamertoaction",text=texticonac,icon='ACTION')
+        if acobj.type in {'MESH','SURFACE','CURVE','FONT','META','GPENCIL'}:
+            if tbtool.renamerfrom != 'MATERIAL':
+                row.prop(tbtool, "renamertomaterial",text=texticonmat,icon='MATERIAL')
+        if tbtool.expand_menus:
+            row = box.row(align=True)
+            row.label(text="Rename for")
+        else:
+            row.separator()
         if tbtool.renamermode =='SCENE':
             if tbtool.renamertosceneactive:
                 row.prop(tbtool, "renamertosceneactive",text="Active Scene",icon='PIVOT_ACTIVE')
@@ -195,9 +205,9 @@ def tbdatarenamer(self, context):
             icononlyrename = True
         else:
             icononlyrename = False
-
         row.prop(tbtool, "renamermode",text="",icon_only=icononlyrename)
-
+        if tbtool.expand_menus:
+            box = layout.box()
         row = box.row(align=True)
         row.operator("tb_ops.renamercut",text="Rename",icon='SORTALPHA')
 
@@ -215,14 +225,16 @@ class TB_DATA_TOOLS_PNL(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "TB"
-    bl_label = "TB_Data_Tools"
+    bl_label = ""
     bl_idname = "TB_PNL_Data_Tools"
     @classmethod
     def poll(cls, context):
         return context.object is not None
     def draw_header(self,context):
+        tbtool = context.scene.tb_data_tool
         layout = self.layout
         layout.label(icon='FILE_TEXT')
+        layout.label(text="Data_Renamer_Tools")
     def draw (self,context):
         tbdatarenamer(self, context)
 
@@ -234,7 +246,8 @@ class TB_DATA_TOOLS_PNL_POP(bpy.types.Operator):
     def poll(cls, context):
         return context.object is not None
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        widthsize = 500     
+        return context.window_manager.invoke_props_dialog(self,width = widthsize)        
     def draw(self, context):
         tbdatarenamer(self, context)
     def execute(self, context):
@@ -244,6 +257,12 @@ class TB_Datarenamer_PreferencesPanel(AddonPreferences):
     bl_idname = __name__
     def draw(self, context):
         layout = self.layout
+        box=layout.box()
+        tbtool = context.scene.tb_data_tool
+        if tbtool.expand_menus:
+            box.prop(tbtool,"expand_menus",text="Collapse Panel",icon='FULLSCREEN_EXIT')
+        else:
+            box.prop(tbtool,"expand_menus",text="Expand Panel",icon='FULLSCREEN_ENTER')
         box=layout.box()
         box.label(text="Hotkey:")
         col = box.column()
