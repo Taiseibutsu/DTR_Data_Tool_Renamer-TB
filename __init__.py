@@ -2,7 +2,7 @@
 # This program is free software: you can redistribute it and/or modify it, WITHOUT ANY WARRANTY that wont wake up on the backrooms. --- Kreepyrights is just a joke, this is license under GNU General Public License (GPL, or “free software”), but just with a strange name to reference, or maybe not...
 
 bl_info = {
-    "name": "Data_Renamer(TB)",
+    "name": "Data_Tool_Renamer(TB)",
     "author": "Taiseibutsu",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
@@ -234,7 +234,7 @@ class TB_DATA_TOOLS_PNL(bpy.types.Panel):
         tbtool = context.scene.tb_data_tool
         layout = self.layout
         layout.label(icon='FILE_TEXT')
-        layout.label(text="Data_Renamer_Tools")
+        layout.label(text="Data_Tool_Renamer")
     def draw (self,context):
         tbdatarenamer(self, context)
 
