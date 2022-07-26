@@ -1,4 +1,4 @@
-# DTR (Data Tool Renamer) (TB)
+# Data Tool Renamer [DTR]
 **Add-on for Blender with operators to transfer name between <img width="20" height="20" src="https://user-images.githubusercontent.com/84092569/157845746-ba556545-2483-4530-919c-0ac7aeb6773d.png"> Objects, <img width="20" height="20" src="https://user-images.githubusercontent.com/84092569/157845568-dedaf00f-d1f6-46f3-bd5c-f390cf0ac9f9.png"> Data-Blocks, <img width="20" height="20" src="https://user-images.githubusercontent.com/84092569/157845743-7a8bd16b-5e46-4e07-9ccd-9f343e3ed830.png"> Materials, <img width="20" height="20" src="https://user-images.githubusercontent.com/84092569/157846132-99dc7138-daa1-47d6-b352-2394fa9c357a.png"> Action names.**
 <p align="center">
 </p>
